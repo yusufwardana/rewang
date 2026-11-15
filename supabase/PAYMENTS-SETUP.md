@@ -1,11 +1,11 @@
 # Supabase and Midtrans sandbox setup
 
-The buyer and payment migration is `migrations/20261114190000_rewangos_demand_payments.sql`. It is local source only; this repo does not apply it to a hosted project.
+The buyer and payment migration is `migrations/20261114190000_rewangos_demand_payments.sql`. The role dashboards and Worker invitation RPCs are in `migrations/20261115122046_role_dashboards.sql`. These files document the schema and need to be applied when setting up a new project.
 
 ## Supabase
 
 1. Apply the migration to a development project after reviewing the target schema.
-2. Enable email OTP in Supabase Auth and configure the site's allowed redirect URLs.
+2. Enable email OTP in Supabase Auth and configure the site's allowed redirect URLs, including `/akun`, `/pekerja`, `/admin`, and `/admin/input-pekerja` on each development or production origin.
 3. Set Edge Function secrets in the Supabase project. Keep server keys out of `.env` and browser code:
 
 ```sh
@@ -29,6 +29,8 @@ The webhook looks up the order and verifies its status, amount, and currency thr
 - Public directory reads use `workers_directory`, which omits `no_wa`; contact unlocks return a per-buyer phone snapshot.
 - `buyers.id` is the Supabase Auth user UUID. Email OTP is passwordless and the Auth trigger creates the buyer row.
 - Report approval is restricted to authenticated users whose server-managed `app_metadata.role` is `admin`.
+- Worker dashboard access is linked by an admin-created invitation to an active, consented profile. The invited user must verify the matching email before `accept_worker_invite` creates the `worker_accounts` link.
+- Dashboard RPCs return admin aggregates, admin transaction summaries, active Worker profiles and contact counts, and an individual Worker profile without returning the Worker phone number or private KTP data.
 - The six extra worker tables are private scaffolding derived from fields already represented in `workers`; worker account/editing flows are not added in this change.
 - Worker click notifications use WhatsApp Cloud API only when `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, an approved two-parameter `WHATSAPP_CHAT_NOTIFICATION_TEMPLATE`, and a supported `WHATSAPP_API_VERSION` are configured as Edge Function secrets. Set optional `WHATSAPP_TEMPLATE_LANGUAGE` (default `id`). Without those secrets, `sudah_chat` is still recorded and the function reports that notification was not sent.
 

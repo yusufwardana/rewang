@@ -56,7 +56,7 @@ function WorkerPreview({ draft, photo }: { draft: WorkerDraft; photo: File | nul
   </aside>;
 }
 
-function WorkerWizard({ adminId, onSaved }: { adminId: string; onSaved: () => void }) {
+function WorkerWizard({ adminId }: { adminId: string }) {
   const [draft, setDraft] = useState(emptyWorker);
   const [step, setStep] = useState(0);
   const [photo, setPhoto] = useState<File | null>(null);
@@ -110,7 +110,6 @@ function WorkerWizard({ adminId, onSaved }: { adminId: string; onSaved: () => vo
     pending.current = true;
     try {
       await saveWorker(supabase, adminId, draft, photo, ktp, portfolios, consent);
-      onSaved();
       setSuccess(`${draft.nama_lengkap.trim()} berhasil disimpan. Formulir siap untuk pekerja berikutnya.`);
       form.current?.reset();
       setDraft(emptyWorker());
@@ -236,7 +235,7 @@ type WorkerListing = {
   consent_withdrawn_at: string | null;
 };
 
-function WorkerListings({ adminId, listRevision }: { adminId: string; listRevision: number }) {
+export function WorkerListingConsent({ adminId, onChange }: { adminId: string; onChange: () => void }) {
   const [list,setList]=useState<WorkerListing[]>([]);
   const [file,setFile]=useState<File|null>(null);
   const [selectedId,setSelectedId]=useState<number|null>(null);
@@ -248,27 +247,7 @@ function WorkerListings({ adminId, listRevision }: { adminId: string; listRevisi
     if(error)setMessage("Daftar listing gagal dimuat. Pastikan migrasi legal sudah diterapkan.");
     else setList((data??[]) as WorkerListing[]);
   }
-  useEffect(()=>{void refresh();},[listRevision]);
-
-  async function changeAvailability(worker: WorkerListing) {
-    if (!supabase || busy) return;
-    const isAvailable = !worker.is_available;
-    setBusy(true);
-    setMessage("");
-    try {
-      const { error } = await supabase.rpc("admin_set_worker_availability", {
-        p_worker_id: worker.id,
-        p_is_available: isAvailable,
-      });
-      if (error) throw error;
-      setList(current => current.map(item => item.id === worker.id ? { ...item, is_available: isAvailable } : item));
-      setMessage(`Status ${worker.nama} diubah ke ${isAvailable ? "Open Job" : "Busy"}.`);
-    } catch {
-      setMessage("Status kerja belum bisa diubah. Coba lagi.");
-    } finally {
-      setBusy(false);
-    }
-  }
+  useEffect(()=>{void refresh();},[]);
 
   async function publish() {
     if(!supabase || !file || selectedId===null)return;
@@ -289,7 +268,7 @@ function WorkerListings({ adminId, listRevision }: { adminId: string; listRevisi
       setMessage("Listing belum bisa diterbitkan. Periksa formulir dan migrasi.");
     } else {
       setMessage("Izin tampil pekerja tercatat.");
-      setSelectedId(null);setFile(null);await refresh();
+      setSelectedId(null);setFile(null);await refresh();onChange();
     }
     setBusy(false);
   }
@@ -298,12 +277,12 @@ function WorkerListings({ adminId, listRevision }: { adminId: string; listRevisi
     setBusy(true);setMessage("");
     const {error}=await supabase.rpc("admin_withdraw_worker_listing",{p_worker_id:id});
     setMessage(error ? "Listing belum bisa dinonaktifkan." : "Listing dinonaktifkan. Kontak baru tidak dapat dibuka.");
-    if(!error)await refresh();
+    if(!error){await refresh();onChange();}
     setBusy(false);
   }
   return <section className="mt-10 rounded-xl border border-[var(--line)] bg-white p-5" aria-labelledby="listing-title">
-    <h2 id="listing-title" className="font-display text-xl font-bold">Status pekerja</h2>
-    <p className="mt-2 text-sm">Ubah status kerja ke Open Job atau Busy sesuai ketersediaan pekerja. Profil tetap tampil selama izin tampil aktif.</p>
+    <h2 id="listing-title" className="font-display text-xl font-bold">Izin tampil pekerja</h2>
+    <p className="mt-2 text-sm">Catat persetujuan penayangan profil atau penarikan izin pekerja.</p>
     <button type="button" className="intake-secondary mt-3" disabled={busy} onClick={()=>void refresh()}>Muat ulang daftar</button>
     {message && <p role="status" className="intake-message">{message}</p>}
     <div className="mt-4 max-h-96 space-y-3 overflow-y-auto">
@@ -313,11 +292,8 @@ function WorkerListings({ adminId, listRevision }: { adminId: string; listRevisi
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <strong>{worker.nama}</strong>
-              <p className="text-sm">{worker.kategori} · {worker.is_available ? "Open Job" : "Busy"}</p>
+              <p className="text-sm">{worker.kategori}</p>
             </div>
-            <button type="button" className="intake-secondary" disabled={busy} onClick={() => void changeAvailability(worker)}>
-              {worker.is_available ? "Ubah ke Busy" : "Ubah ke Open Job"}
-            </button>
           </div>
           <details className="mt-3 text-sm">
             <summary className="cursor-pointer font-semibold">Izin tampil · {worker.listing_active ? "Profil tampil" : "Profil disembunyikan"}</summary>
@@ -353,7 +329,6 @@ export default function AdminWorkerInput() {
   const [note, setNote] = useState("");
   const [authError, setAuthError] = useState("");
   const [sending, setSending] = useState(false);
-  const [listRevision, setListRevision] = useState(0);
   useEffect(() => {
     document.title = "Input Pekerja | RewangOS";
     if (!supabase) return;
@@ -384,16 +359,13 @@ export default function AdminWorkerInput() {
       }}>Keluar</button>}
     </div></header>
     <main className="intake-shell intake-main">
-      <a className="intake-back" href="/"><ArrowLeft size={16} aria-hidden="true" /> Direktori</a>
+      <a className="intake-back" href="/admin/"><ArrowLeft size={16} aria-hidden="true" /> Dashboard admin</a>
       <h1 className="font-display">Input pekerja</h1>
       <p className="intake-intro">Tambahkan profil pekerja ke direktori RewangOS.</p>
       {authError && <p className="intake-message intake-error" role="alert">{authError}</p>}
       {!supabase ? <p className="intake-message intake-error" role="alert">Koneksi Supabase belum dikonfigurasi.</p>
       : user === undefined ? <p role="status">Memeriksa sesi admin…</p>
-      : isAdmin ? <>
-        <WorkerWizard key={user.id} adminId={user.id} onSaved={() => setListRevision(revision => revision + 1)} />
-        <WorkerListings key={`listings-${user.id}`} adminId={user.id} listRevision={listRevision} />
-      </>
+      : isAdmin ? <WorkerWizard key={user.id} adminId={user.id} />
       : user ? <div className="intake-gate"><h2>Akses khusus admin</h2><p>Keluar lalu masuk dengan akun admin RewangOS.</p></div>
       : <form className="intake-gate" onSubmit={signIn}>
         <h2>Masuk sebagai admin</h2>

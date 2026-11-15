@@ -259,6 +259,13 @@ export default function App(){
 
   useEffect(()=>{ if(toast){ const t=setTimeout(()=>setToast(""), 4200); return ()=>clearTimeout(t); } },[toast]);
 
+  useEffect(()=>{
+    const params=new URLSearchParams(window.location.search);
+    if(params.get("beli-kredit")!=="1") return;
+    setShowPackages(true);
+    window.history.replaceState({},"",window.location.pathname);
+  },[]);
+
   const categories = useMemo(()=>["Semua", ...new Set(workers.map(w=>w.category).filter(Boolean))], [workers]);
   const districts = useMemo(()=>["Semua", ...new Set(workers.map(w=>w.district).filter(Boolean))], [workers]);
 
@@ -414,7 +421,11 @@ export default function App(){
             </div>
           </div>
           <p className="header-locations mt-2 leading-relaxed">Surakarta • Sukoharjo • Wonogiri • Klaten • Boyolali • Karanganyar • Sragen</p>
-          {user?.isAdmin && <a href="/admin/input-pekerja" className="mt-2 inline-flex min-h-11 items-center rounded-lg border border-white/20 px-3 text-xs font-bold text-white">Input pekerja</a>}
+          <nav className="mt-2 flex flex-wrap gap-2" aria-label="Dashboard akun">
+            <a href="/akun" className="inline-flex min-h-11 items-center rounded-lg border border-white/20 px-3 text-xs font-bold text-white">Akun buyer</a>
+            <a href="/pekerja" className="inline-flex min-h-11 items-center rounded-lg border border-white/20 px-3 text-xs font-bold text-white">Ruang worker</a>
+            {user?.isAdmin && <><a href="/admin" className="inline-flex min-h-11 items-center rounded-lg border border-white/20 px-3 text-xs font-bold text-white">Dashboard admin</a><a href="/admin/input-pekerja" className="inline-flex min-h-11 items-center rounded-lg border border-white/20 px-3 text-xs font-bold text-white">Input pekerja</a></>}
+          </nav>
         </div>
       </header>
 
