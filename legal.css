@@ -1,0 +1,97 @@
+.legal-document {
+  font-size: 1rem;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.legal-nav-link {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 2.75rem;
+}
+
+.legal-page a {
+  text-underline-offset: .16em;
+}
+
+.legal-page a:hover {
+  text-decoration-thickness: .13em;
+}
+
+.legal-page :is(a, button):focus-visible {
+  outline-color: var(--primary);
+}
+
+.legal-header a:focus-visible {
+  outline-color: var(--gold);
+}
+
+.legal-phone {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.legal-print-action:focus-visible {
+  outline-offset: 4px;
+}
+
+.legal-paper-fields {
+  display: grid;
+  gap: .75rem;
+}
+
+.legal-paper-fields > div {
+  display: grid;
+  grid-template-columns: minmax(0, 11rem) minmax(0, 1fr);
+  align-items: end;
+  gap: .75rem;
+}
+
+.legal-paper-fields dd {
+  min-block-size: 1.65rem;
+  border-bottom: 1px solid currentColor;
+}
+
+.legal-signature dd {
+  min-block-size: 3.5rem;
+}
+
+@media screen and (max-width: 30rem) {
+  .legal-paper-fields > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: .25rem;
+  }
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm 16mm;
+  }
+
+  .legal-page {
+    min-height: 0;
+    background: white;
+    color: black;
+  }
+
+  .legal-document {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    background: white;
+    font-size: 11pt;
+    box-shadow: none;
+  }
+
+  .legal-document section,
+  .legal-signatures {
+    break-inside: avoid;
+  }
+
+  .legal-document :is(h1, h2) {
+    break-after: avoid;
+    color: black;
+  }
+}

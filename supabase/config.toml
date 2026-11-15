@@ -1,0 +1,8 @@
+[functions.create-midtrans-snap]
+verify_jwt = true
+
+[functions.midtrans-webhook]
+verify_jwt = false
+
+[functions.notify-worker-chat]
+verify_jwt = true

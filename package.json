@@ -1,0 +1,28 @@
+{
+  "name": "rewangos-vite",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.119.0",
+    "@vitejs/plugin-react": "4.7.0",
+    "lucide-react": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "vite": "6.4.6"
+  },
+  "devDependencies": {
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "autoprefixer": "latest",
+    "postcss": "latest",
+    "supabase": "^3.1.0",
+    "tailwindcss": "3.4.17",
+    "typescript": "latest"
+  }
+}
